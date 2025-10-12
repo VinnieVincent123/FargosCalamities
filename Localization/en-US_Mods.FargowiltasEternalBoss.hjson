@@ -7,4 +7,6 @@ Items: {
 	}
 }
 
-NPCs.EternalBoss.DisplayName: Eternal Seraphim
+NPCs: {
+	ChampionGale.DisplayName: Champion of Gale
+}
