@@ -9,4 +9,5 @@ Items: {
 
 NPCs: {
 	ChampionGale.DisplayName: Champion of Gale
+	ChampionElements.DisplayName: Champion of Elements
 }
