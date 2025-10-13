@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityMod;
@@ -33,7 +32,7 @@ namespace FargowiltasEternalBoss.Content.Items.Accessories.Eternity
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.BuffImmune[ModContent.BuffType<GalvanicCorrosion>()] = true;
+            player.buffImmune[ModContent.BuffType<GalvanicCorrosion>()] = true;
         }
     }
 
