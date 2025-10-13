@@ -1,13 +1,14 @@
 # This file will automatically update with entries for new content after a build and reload.
 
 Items: {
-
 	JellyWhistle: {
 		DisplayName: Jelly Whistle
-		Tooltip: "Grants Immunity to Galvanic Corrosion
+		Tooltip: ""
+	}
 
-		Every 25 attacks summon friendly Jellyfish
-		that zap your Enemies "
+	ForgeCosmos: {
+		DisplayName: Forge Cosmos
+		Tooltip: ""
 	}
 }
 
