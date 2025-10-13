@@ -1,9 +1,13 @@
 # This file will automatically update with entries for new content after a build and reload.
 
 Items: {
-	KeyToEternity: {
-		DisplayName: Key To Eternity
-		Tooltip: Your claim of Divinity will be tested
+
+	JellyWhistle: {
+		DisplayName: Jelly Whistle
+		Tooltip: "Grants Immunity to Galvanic Corrosion
+
+		Every 25 attacks summon friendly Jellyfish
+		that zap your Enemies "
 	}
 }
 
@@ -11,3 +15,5 @@ NPCs: {
 	ChampionGale.DisplayName: Champion of Gale
 	ChampionElements.DisplayName: Champion of Elements
 }
+
+Projectiles.JellyWhistleProjectile.DisplayName: Jelly Whistle Projectile
