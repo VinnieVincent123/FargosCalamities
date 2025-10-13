@@ -79,7 +79,7 @@ namespace FargowiltasEternalBoss.Content.Bosses.Champions.ChampOne
             NPC.height = 234;
             NPC.damage = 110;
             NPC.defense = 50;
-            NPC.lifeMax = 2500000;
+            NPC.lifeMax = 2000000;
             NPC.HitSound = SoundID.NPCHit7;
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.noGravity = false;
