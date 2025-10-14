@@ -7,7 +7,7 @@ Items: {
 	}
 
 	ForgeCosmos: {
-		DisplayName: Forge Cosmos
+		DisplayName: Forge of the Cosmos
 		Tooltip: ""
 	}
 }
@@ -15,6 +15,7 @@ Items: {
 NPCs: {
 	ChampionGale.DisplayName: Champion of Gale
 	ChampionElements.DisplayName: Champion of Elements
+	Woman.DisplayName: Calamitas
 }
 
 Projectiles.JellyWhistleProjectile.DisplayName: Jelly Whistle Projectile
