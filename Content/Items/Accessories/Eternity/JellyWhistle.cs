@@ -11,6 +11,7 @@ using FargowiltasSouls;
 using FargowiltasSouls.Core.AccessoryEffectSystem;
 using FargowiltasSouls.Core.Toggler.Content;
 using FargowiltasCrossmod;
+using FargowiltasEternalBoss.Content.Projectiles.Accessories.IlmereanCrest;
 
 namespace FargowiltasEternalBoss.Content.Items.Accessories.Eternity
 {
