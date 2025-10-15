@@ -16,6 +16,7 @@ NPCs: {
 	ChampionGale.DisplayName: Champion of Gale
 	ChampionElements.DisplayName: Champion of Elements
 	Woman.DisplayName: Calamitas
+	ChallengerGale.DisplayName: Seal o Sonic
 }
 
 Projectiles.JellyWhistleProjectile.DisplayName: Jelly Whistle Projectile
