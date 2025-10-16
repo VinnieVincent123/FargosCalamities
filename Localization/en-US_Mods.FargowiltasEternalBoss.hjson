@@ -17,6 +17,18 @@ NPCs: {
 	ChampionElements.DisplayName: Champion of Elements
 	Woman.DisplayName: Calamitas
 	ChallengerGale.DisplayName: Seal o Sonic
+	ChallengerWar.DisplayName: Challenger War
+	ChallengerPestilence.DisplayName: Challenger Pestilence
+	ChallengerGreed.DisplayName: Challenger Greed
+	ChallengerFamine.DisplayName: Challenger Famine
+	ChallengerDevastation.DisplayName: Challenger Devastation
+	ChallengerElements.DisplayName: Challenger Elements
+	ChampionGods.DisplayName: Hercules, Champion of Gods
+	ChampionWar.DisplayName: Champion War
+	ChampionPestilence.DisplayName: Champion Pestilence
+	ChampionGreed.DisplayName: Champion Greed
+	ChampionFamine.DisplayName: Champion Famine
+	ChampionDevastation.DisplayName: Champion Devastation
 }
 
 Projectiles.JellyWhistleProjectile.DisplayName: Jelly Whistle Projectile
