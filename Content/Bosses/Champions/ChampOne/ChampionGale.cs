@@ -89,6 +89,8 @@ namespace FargowiltasEternalBoss.Content.Bosses.Champions.ChampOne
             NPC.aiStyle = -1;
             NPC.value = Item.buyPrice(4);
             NPC.boss = true;
+
+            Music = MusicLoader.GetMusicSlot(Mod, "Assets/Music/ChallengerGale");
         }
 
         public override bool CanHitPlayer(Player target, ref int CooldownSlot)

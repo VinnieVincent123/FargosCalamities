@@ -52,7 +52,7 @@ namespace FargowiltasEternalBoss.Content.Bosses.Champions.ChampFive
             NPC.boss = true;
             NPC.lifeMax = 6800;
 
-            Music = MusicLoader.GetMusicSlot(Mod, "Assets/Music/ChallengerGale");
+            Music = MusicLoader.GetMusicSlot(Mod, "Assets/Music/ChallengerWar");
         }
 
         public override void ApplyDifficultyAndPlayerScaling(int numPlayers, float balance, float bossAdjustment)
