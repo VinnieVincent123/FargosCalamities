@@ -1,5 +1,5 @@
-displayName = Wrath of the Fargos
+displayName = Fargos Calamities
 author = Mr. Callous
 version = 0.1
-modReferences = Fargowiltas@3.4, FargowiltasSouls@1.8, Luminance, Daybreak, CalamityMod, NoxusBoss, FargowiltasCrossmod@1.3, HeavenlyArsenal, CalamitySouls
+modReferences = Fargowiltas@3.4, FargowiltasSouls@1.8, Luminance, Daybreak, CalamityMod, FargowiltasCrossmod@1.3
 
