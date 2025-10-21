@@ -13,11 +13,13 @@ using System.Linq;
 using CalamityMod;
 using Fargowiltas;
 using FargowiltasSouls;
+using FargowiltasSouls.Core.Systems;
 using FargowiltasSouls.Common.Utilities;
 using FargowiltasSouls.Content.Buffs.Eternity;
 using FargowiltasCrossmod;
-using FargowiltasEternalBoss;
+using FargowiltasEternalBoss.Core.Systems;
 using Luminance.Core.Graphics;
+using Luminance.Common.DataStructures;
 using Microsoft.CodeAnalysis;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -26,6 +28,10 @@ namespace FargowiltasEternalBoss.Content.Bosses.Challengers.ChallOne
 {
     public class ChallengerGale : ModNPC
     {
+        private Action<NPC> difficultyBehavior;
+        private bool initialized;
+
+        public static bool bossAlive;
 
         public override void SetStaticDefaults()
         {
@@ -72,6 +78,72 @@ namespace FargowiltasEternalBoss.Content.Bosses.Challengers.ChallOne
             base.ReceiveExtraAI(reader);
 
             NPC.scale = reader.ReadSingle();
+        }
+
+        public override void AI()
+        {
+           if (!initialized)
+           {
+               SelectDifficultyBehavior();
+               initialized = true;
+           }
+
+           difficultyBehavior?.Invoke(NPC);
+        }
+
+        
+
+        private void SelectDifficultyBehavior()
+        {
+            if (WorldSavingSystem.EternityMode)
+                difficultyBehavior = EternityAI;
+            else if (WorldSavingSystem.MasochistModeReal)
+                difficultyBehavior = MasochistAI;
+            else if (WorldSavingSystem.MasochistModeReal && Main.getGoodWorld)
+                difficultyBehavior = JustDieAI;    
+            else if (Main.getGoodWorld)
+                difficultyBehavior = LegendaryAI;    
+            else if (Main.masterMode)
+                difficultyBehavior = MasterAI;
+            else if (Main.expertMode)
+                difficultyBehavior = ExpertAI;
+            else
+                difficultyBehavior = ClassicAI;                
+        }
+
+        private void ClassicAI(NPC npc)
+        {
+            //
+        }
+
+        private void ExpertAI(NPC npc)
+        {
+            //
+        }
+
+        private void MasterAI(NPC npc)
+        {
+            //
+        }
+
+        private void EternityAI(NPC npc)
+        {
+            //
+        }
+
+        private void MasochistAI(NPC npc)
+        {
+            //
+        }
+
+        private void LegendaryAI(NPC npc)
+        {
+            //
+        }
+
+        private void JustDieAI(NPC npc)
+        {
+            //
         }
     }
 }
