@@ -57,9 +57,16 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             Illusion = 1,
             SharkDevour = 2,
             SilvaVines = 3,
-            RadianceShield = 4
+            RadianceShield = 4, 
+            XerocRage = 5,
+            PillarThrow = 6,
+            LoveThem = 7,
+            Susanoo = 8,
             //Add more here later
+            Desperation = 11
         }
+
+        private readonly Dictionary<PWAttack, Action<NPC, Player>> attackHandlers = new();
 
         private int attackIndex;
         private int[] attackCycle = new int[] { 0, 1, 0, 2};
@@ -76,8 +83,21 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
 
         public override void SetDefaults()
         {
-            NPC.lifeMax = (int)Math.Round(NPC.lifeMax * 1.5f);
-            NPC.damage = (int)Math.Round(NPC.damage * 1.2f);
+            NPC.lifeMax = (int)Math.Round(NPC.lifeMax * 2f);
+            NPC.damage = (int)Math.Round(NPC.damage * 1.8f);
+        }
+
+        public override void Load()
+        {
+            attackHandlers[PWAttack.Illusion] = RunIllusionPhase;
+            attackHandlers[PWAttack.SharkDevour] = RunSharkDevourPhase;
+            attackHandlers[PWAttack.SilvaVines] = RunSilvaVinesPhase;
+            attackHandlers[PWAttack.RadianceShield] = RunRadianceShieldPhase;
+            attackHandlers[PWAttack.XerocRage] = RunXerocRagePhase;
+            attackHandlers[PWAttack.PillarThrow] = RunPillarThrowPhase;
+            attackHandlers[PWAttack.LoveThem] = RunLoveThemPhase;
+            attackHandlers[PWAttack.Susanoo] = RunSusanooPhase;
+            attackHandlers[PWAttack.Desperation] = RunDesperationPhase;
         }
 
         public override void SendExtraAI(BinaryWriter writer)
@@ -131,24 +151,11 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
                 }
             }
 
-            if (inSpecialAttack)
-            {
-                switch (currentAttack)
-                {
-                    case PWAttack.Illusion:
-                        RunIllusionPhase(target);
-                        break;
-                    case PWAttack.SharkDevour:
-                        RunSharkDevourPhase(target);
-                        break;
-                    default:
-                       ChasePlayer(target);
-                       break;        
-                }
-            }
+            if (inSpecialAttack && attackHandlers.TryGetValue(currentAttack, out var handler))
+                handler.Invoke(npc, target);
             else
             {
-                ChasePlayer(target);
+                ChasePlayer(npc, target);
             }
 
             if (Main.rand.NextBool(12))
@@ -352,6 +359,61 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             else
             {
                 EndSpecialAttack();
+            }
+        }
+
+        private void RunSilvaVinesPhase(NPC npc, Player target)
+        {
+            attackPhaseTimer++;
+
+            if (attackPhaseTimer == 1)
+            {
+                SoundEngine.PlaySound(SoundID.Grass, npc.Center);
+
+                for (int i = 0; i < 12; i++)
+                {
+                    float rot = MathHelper.ToRadians(30 * i);
+                    Vector2 vel = rot.ToRotationVector2() * 3f;
+                    Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center,
+                        vel, ModContent.ProjectileType<SilvaVineProj>(), 0, 0, Main.myPlayer, npc.whoAmI);
+                }
+            }
+
+            npc.velocity *= 0.9f;
+
+            if (attackPhaseTimer > 300)
+                EndSpecialAttack(npc);
+        }
+
+        private void RunRadianceShieldPhase(NPC npc, Player target)
+        {
+            attackPhaseTimer++;
+
+            if (attackPhaseTimer == 1)
+            {
+                SoundEngine.PlaySound(SoundID.Zombie104, npc.Center);
+                npc.dontTakeDamage = true;
+                npc.alpha = 0;
+            }
+
+            float radius = 600f;
+            float rotSpeed = 0.025f;
+            Vector2 offset = new Vector2(radius, 0).RotatedBy(attackPhaseTimer * rotSpeed);
+            Vector2 desiredPos = target.Center + offset;
+            npc.Center = Vector2.Lerp(npc.Center, desiredPos, 0.1f);
+
+            if (attackPhaseTimer % 12 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                Vector2 dir = (target.Center - npc.Center).SafeNormalize(Vector2.Zero);
+                Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, dir * 14f,
+                    ProjectileID.CultistBossFireball, FargoSoulsUtil.ScaledProjectileDamage(npc.defDamage), 2f, Main.myPlayer);
+            }
+
+            if (attackPhaseTimer > 360)
+            {
+                npc.dontTakeDamage = false;
+                npc.alpha = 0;
+                EndSpecialAttack(npc);
             }
         }
 
