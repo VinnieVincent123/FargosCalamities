@@ -55,7 +55,9 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
         {
             None = 0,
             Illusion = 1,
-            SharkDevour = 2
+            SharkDevour = 2,
+            SilvaVines = 3,
+            RadianceShield = 4
             //Add more here later
         }
 
@@ -67,6 +69,8 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
 
         private int attackPhaseTimer;
         private int chaseGrace = 0;
+
+        private bool IsMasochist() => WorldSavingSystem.MasochistModeReal;
 
         private const byte NET_SYNC_ATTACK = 1;
 
@@ -111,8 +115,9 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             if (!inSpecialAttack && chaseGrace == 0)
             {
                 attackTimer++;
+                int triggerTime = IsMasochist() ? 360 : 540;
 
-                if (attackTimer >= 540 + Main.rand.Next(-120, 121))
+                if (attackTimer >= triggerTime + Main.rand.Next(-120, 121))
                 {
                     attackTimer = 0;
 
@@ -163,6 +168,8 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             Vector2 dir = toTarget.SafeNormalize(Vector2.Zero);
 
             float baseSpeed = 1.35f;
+            if (IsMasochist())
+                baseSpeed *= 1.6f;
 
             if (distance < 80f)
                 baseSpeed *= 0.6f;
@@ -204,6 +211,19 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             {
                 if (attackPhaseTimer == 60)
                 {
+                    if (IsMasochist() && Main.netMode != NetmodeID.MultiplayerClient)
+                    {
+                        int extra = 2;
+                        for (int j = 0; j < extra; j++)
+                        {
+                            int idx = NPC.NewNPC(NPC.GetSource_FromAI(),
+                            (int)(NPC.Center.X + Main.rand.NextFloat(-600, 600)),
+                            (int)(NPC.Center.Y + Main.rand.NextFloat(-400, 400)),
+                            PWIllusionTypePlaceholder);
+                            if (Main.npc.IndexInRange(idx))
+                                Main.npc[idx].damage = (int)(NPC.damage * 0.4f);
+                        }
+                    }
                     if (Main.netMode != NetmodeID.MultiplayerClient)
                     {
                         int clones = 2 + Main.rand.Next(2);
@@ -238,6 +258,13 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
                     Vector2 chargeDir = (target.Center - NPC.Center).SafeNormalize(Vector2.Zero);
                     float chargeSpeed = 32f;
                     NPC.velocity = chargeDir * chargeSpeed;
+
+                    if (IsMasochist() && attackPhaseTimer % 10 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+                    {
+                        Vector2 projVel = chargeDir.RotatedByRandom(MathHelper.ToRadians(25)) * 10f;
+                        Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, projVel,
+                            ProjectileID.CursedFlameFriendly, NPC.damage / 6, 2f, Main.myPlayer);
+                    }
                 }
             }
             else
@@ -305,6 +332,17 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
                 }
 
                 SoundEngine.PlaySound(SoundID.Item122, NPC.Center);
+
+                if (IsMasochist() && Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        Vector2 offset = Main.rand.NextVector2Circular(300, 300);
+                        Vector2 vel = (target.Center - (target.Center + offset)).SafeNormalize(Vector2.Zero) * 10f;
+                        Projectile.NewProjectile(NPC.GetSource_FromAI(), target.Center + offset, vel,
+                            ProjectileID.CursedFlameFriendly, NPC.damage / 5, 2f, Main.myPlayer);
+                    }
+                }
             }
 
             else if (attackPhaseTimer < 240)
@@ -326,6 +364,14 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             NPC.noTileCollide = false;
             NPC.noGravity = false;
             NPC.netUpdate = true;
+
+            if (IsMasochist())
+            {
+                if (currentAttack == PWAttack.Illusion)
+                    StartSharkDevourPhase();
+                else if (currentAttack == PWAttack.SharkDevour && Main.rand.NextBool(2))
+                    StartIllusionPhase();    
+            }
         }
 
         public override void FindFrame(int frameHeight)
@@ -345,7 +391,7 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
 
         public override void OnKill()
         {
-
+            //
         }
     }
 }
