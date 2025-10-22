@@ -253,6 +253,99 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             attackPhaseTimer = 0;
             NPC. velocity *= 0.1f;
             NPC.netUpdate = true;
-            if (Main.netMode != NetmodeID)
+            if (Main.netMode != NetmodeID.Server)
+                SoundEngine.PlaySound(SoundID.Item62, NPC.Center);
         }
-       
+
+        private void RunSharkDevourPhase(Player target)
+        {
+            attackPhaseTimer++;
+
+            if (attackPhaseTimer == 1)
+            {
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    int summonCount = 4 + Main.rand.Next(2);
+                    for (int i = 0; i < summonCount; i++)
+                    {
+                        Vector2 spawnPos = NPC.Center + new Vector2(Main.rand.NextFloat(-500, 500), Main.rand.NextFloat(-300, 300));
+                        int idx = NPC.NewNPC(NPC.GetSource_FromAI(), (int)spawnPos.Y, ReaverSharkTypePlaceholder);
+                        if (Main.npc.IndexInRange(idx))
+                        {
+                            Main.npc[idx].velocity = (target.Center - Main.npc[idx].Center.SafeNormalize(Vector2.Zero) * (6f + Main.rand.NextFloat(0f, 3f)));
+                        }
+                    }
+                }
+            }
+
+            else if (attackPhaseTimer < 180)
+            {
+                Vector2 approach = (target.Center - NPC.Center).SafeNormalize(Vector2.Zero) * 6f;
+                NPC.velocity = Vector2.Lerp(NPC.velocity, approach, 0.04f);
+            }
+
+            else if (attackPhaseTimer == 180)
+            {
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    for (int i = 0; i < Main.maxNPCs; i++)
+                    {
+                        NPC other = Main.npc[i];
+                        if (!other.active) continue;
+                        if (other.type != ReaverSharkTypePlaceholder) continue;
+
+
+                        Vector2 dir = (target.Center - other.Center).SafeNormalize(Vector2.Zero);
+                        float speed = 12f + Main.rand.NextFloat(-2f, 2f);
+                        int proj = Projectile.NewProjectile(NPC.GetSource_FromAI(), other.Center, dir * speed, DevouredSharkProjectilePlaceholder, NPC.damage / 4, 3f, Main.myPlayer);
+
+                        other.active = false;
+                        NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, other.whoAmI);
+                    }
+                }
+
+                SoundEngine.PlaySound(SoundID.Item122, NPC.Center);
+            }
+
+            else if (attackPhaseTimer < 240)
+            {
+                NPC.velocity *= 0.96f;
+            }
+            else
+            {
+                EndSpecialAttack();
+            }
+        }
+
+        private void EndSpecialAttack()
+        {
+            inSpecialAttack = false;
+            currentAttack = PWAttack.None;
+            attackPhaseTimer = 0;
+            chaseGrace = 45;
+            NPC.noTileCollide = false;
+            NPC.noGravity = false;
+            NPC.netUpdate = true;
+        }
+
+        public override void FindFrame(int frameHeight)
+        {
+            //
+        }
+
+        private void MaybeChangeCycleByHP()
+        {
+            float lifePercent = NPC.life / (float)NPC.lifeMax;
+
+            if (lifePercent < 0.75f)
+                attackCycle = new int[] { 0, 1, 2, 1 };
+            if (lifePercent < 0.40f)
+                attackCycle = new int[] { 1, 2, 1, 2 };    
+        }
+
+        public override void OnKill()
+        {
+
+        }
+    }
+}
