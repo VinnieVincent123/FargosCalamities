@@ -97,7 +97,7 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             attackHandlers[PWAttack.PillarThrow] = RunPillarThrowPhase;
             attackHandlers[PWAttack.LoveThem] = RunLoveThemPhase;
             attackHandlers[PWAttack.Susanoo] = RunSusanooPhase;
-            attackHandlers[PWAttack.Desperation] = RunDesperationPhase;
+            attackHandlers[PWAttack.Desperation] = StartDesperationPhase;
         }
 
         public override void SendExtraAI(BinaryWriter writer)
@@ -415,6 +415,108 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
                 npc.alpha = 0;
                 EndSpecialAttack(npc);
             }
+        }
+
+        private void RunXerocRagePhase(NPC npc, Player target)
+        {
+            attackPhaseTimer++;
+
+            int duration = WorldSavingSystem.MasochistModeReal ? 1200 : 600;
+
+            if (attackPhaseTimer == 1)
+            {
+                SoundEngine.PlaySound(SoundID.Roar, npc.Center);
+                npc.color = Color.MediumPurple;
+                npc.localAI[0] = 1;
+
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    int xeroc = Projectile.NewProjectile(npc.GetSource_FromAI(),
+                    npc.Center + new Vector2(0, -800f),
+                    Vector2.Zero,
+                    ModContent.ProjectileType<XerocEyeProjectile>(),
+                    0, 0f, Main.myPlayer);
+                    npc.ai[3] = xeroc;
+                }
+            }
+            
+            if (WorldSavingSystem.MasochistModeReal)
+            {
+                if (attackPhaseTimer % 6 == 0)
+                {
+                    Projectile xerocProj = Main.projectile[(int)npc.ai[3]];
+                    if (xerocProj.active)
+                    {
+                        Vector2 dirToEye = (xerocProj.Center - npc.Center).SafeNormalize(Vector2.UnitY);
+                        Vector2 spread = dirToEye.RotatedByRandom(MathHelper.ToRadians(45));
+                        float speed = 22f + Main.rand.NextFloat(-5f, 6f);
+
+                        int[] masochistProjectiles = new int[]
+                        {
+                          ProjectileID.PhantasmalBolt,
+                          ProjectileID.CultistBossFireball,
+                          ProjectileID.PhantasmalEye,
+                          ProjectileID.CultistBossLightningOrbArc
+                        };
+                        int projType = Main.rand.Next(masochistProjectiles);   
+
+                        Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, spread * speed,
+                            projType, FargoSoulsUtil.ScaledProjectileDamage(npc.defDamage), 3f, Main.myPlayer);
+                }
+                } 
+
+                if (attackPhaseTimer % 180 == 0)
+                {
+                    Vector2 beamDir = (target.Center - npc.Center).SafeNormalize(Vector2.Zero);
+                    Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, beamDir * 25f,
+                        ProjectileID.DeathLaser, FargoSoulsUtil.ScaledProjectileDamage(npc.defDamage) * 2, 6f, Main.myPlayer);
+                }
+            }
+
+            if (attackPhaseTimer % 12 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                Projectile xerocProj = Main.projectile[(int)npc.ai[3]];
+                if (xerocProj.active)
+                {
+                    Vector2 dirToEye = (xerocProj.Center - npc.Center).SafeNormalize(Vector2.UnitY);
+                    Vector2 spread = dirToEye.RotatedByRandom(MathHelper.ToRadians(35));
+                    float speed = 20f + Main.rand.NextFloat(-4f, 4f);
+
+                    int projType = Main.rand.NextBool()
+                        ? ProjectileID.PhantasmalBolt
+                        : ProjectileID.CultistBossFireball;
+
+                    Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, spread * speed,
+                        projType, FargoSoulsUtil.ScaledProjectileDamage(npc.defDamage), 3f, Main.myPlayer);
+                }
+            }
+
+            if (attackPhaseTimer % 90 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                Vector2 burstDir = (target.Center - npc.Center).SafeNormalize(Vector2.Zero);
+                for (int i = 0; i < 6; i++)
+                {
+                    Vector2 spread = burstDir.RotatedByRandom(MathHelper.ToRadians(15));
+                    Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, spread * 18f,
+                        ProjectileID.CultistBossLightningOrbArc,
+                        FargoSoulsUtil.ScaledProjectileDamage(npc.defDamage), 3f, Main.myPlayer);
+                }
+            }
+
+            npc.velocity = npc.velocity.RotatedByRandom(MathHelper.ToRadians(6)) * 1.05f;
+
+            if (attackPhaseTimer > duration)
+            {
+                npc.localAI[0] = 0;
+                npc.color = Color.White;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    int xerocIdx = (int)npc.ai[3];
+                    if (xerocIdx >= 0 && xerocIdx < Main.maxProjectiles)
+                        Main.projectile[xerocIdx].Kill();
+                }
+                EndSpecialAttack(npc);
+            }  
         }
 
         private void EndSpecialAttack()
