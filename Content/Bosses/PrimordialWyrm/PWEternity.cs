@@ -575,6 +575,57 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
 
         }
 
+        private void RunYamiYamiNoMiPhase(NPC npc, Player target)
+        {
+            attackPhaseTimer++;
+            int duration = WorldSavingSystem.MasochistModeReal ? 600 : 540;
+
+            if (attackPhaseTimer == 1)
+            {
+                SoundEngine.PlaySound(SoundID.Roar, npc.Center);
+                Main.NewText("Zehahahaha", Color.DarkViolet);
+
+                if (Main.netMode != NetModeID.MultiplayerClient)
+                {
+                    Vector2 spawn = npc.Center;
+                    int singularity = Projectile.NewProjectile(
+                        npc.GetSource_FromAI(), spawn, Vector2.Zero,
+                        ModContent.ProjectileType<BlackHoleProjectile>(),
+                        FargoSoulsUtil.ScaledProjectileDamage(npc.defDamage) / 2, 0f, Main.myPlayer, npc.whoAmI);
+                    npc.ai[3] = singularity;
+                }
+            }
+
+            if (attackPhaseTimer > 60 && attackPhaseTimer < duration - 60)
+            {
+                Projectile core = Main.projectile[(int)npc.ai[3]];
+                if (core.active)
+                {
+                    Vector2 pul = (core.Center - target.Center);
+                    float dist = pull.Length();
+                    if (dist < 1200f)
+                    {
+                        pull.Normalize();
+                        float strength = MathHelper.Lerp(0.3f, 2.0f, 1f - dist / 1200f);
+                        target.velocity += pull * strength * 0.2f;
+                    }
+                }
+            }
+
+            if (WorldSavingSystem.MasochistModeReal)
+            {
+                pullStrength *= 1.5f;
+
+                if (attackPhaseTimer % 120 == 0)
+                    Projectile.NewProjectile(npc.GetSource_FromAI(),
+                        core.Center, Vector2.Zero, ProjectileID.ShadowBeamHostile,
+                        FargoSoulsUtil.ScaledProjectileDamage(npc.defDamage) / 3, 3f, Main.myPlayer);
+            }
+
+            if (attackPhaseTimer > duration)
+                EndSpecialAttack(npc);
+        }
+
         private void EndSpecialAttack()
         {
             inSpecialAttack = false;
