@@ -550,7 +550,96 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             if (lifePercent < 0.75f)
                 attackCycle = new int[] { 0, 1, 2, 1 };
             if (lifePercent < 0.40f)
-                attackCycle = new int[] { 1, 2, 1, 2 };    
+                attackCycle = new int[] { 1, 2, 1, 2 };
+        }
+
+        public override void CheckDead()
+        {
+            if (currentAttack != PWAttack.Desperation && NPC.life <= 1)
+            {
+                StartDesperationPhase();
+                return false;
+            }
+            return true;
+        }
+
+        private void StartDesperationPhase()
+        {
+            inSpecialAttack = true;
+            currentAttack = PWAttack.Desperation;
+            attackPhaseTimer = 0;
+            NPC.life = 1;
+            NPC.dontTakeDamage = true;
+            NPC.defense = int.MaxValue;
+            NPC.knockBackResist = 0f;
+            SoundEngine.PlaySound(SoundID.Roar, NPC.Center);
+            Main.NewText("The Abyss begins to boil...", Color.MediumPurple);
+        }
+        
+        private void RunDesperationPhase(NPC npc, Player target)
+        {
+            attackPhaseTimer++;
+
+            int duration = WorldSavingSystem.MasochistModeReal ? 7200 : 7200;
+
+            float surfaceY = Main.worldSurface * 16f - 200f;
+
+            if (attackPhaseTimer % 30 == 0)
+                SoundEngine.PlaySound(SoundID.Item74, npc.Center);
+
+            if (Main.rand.NextBool(6))
+                Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(400, 300),
+                    DustID.Torch, Vector2.Zero, 100, Color.OrangeRed, 1.4f);
+
+            target.AddBuff(BuffID.OnFire, 2);
+            Lighting.AddLight(target.Center, 1f, 0.3f, 0.1f);
+
+            Vector2 goal = new Vector2(npc.Center.X, surfaceY);
+            Vector2 toGoal = (goal - npc.Center).SafeNormalize(Vector2.Zero);
+            npc.velocity = Vector2.Lerp(npc.velocity, toGoal * 25f, 0.05f);
+
+            if (target.Center.Y > surfaceY)
+                target.velocity.Y -= 0.3f;
+
+            if (attackPhaseTimer % 90 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                Vector2 spawnPos = npc.Center + new Vector2(Main.rand.Next(-600, 600), -800f);
+                Vector2 vel = Vector2.UnitY * (15f + Main.rand.NextFloat(5f));
+                Projectile.NewProjectile(GetSource_FromAI(), spawnPos, vel,
+                    ProjectileID.FallingStar, 150, 0f, Main.myPlayer);
+            }                
+
+            if (npc.Center.Y < surfaceY + 100)
+            {
+                if (attackPhaseTimer == duration - 240)
+                {
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                    {
+                        int xeroc = Projectile.NewProjectile(npc.GetSource_FromAI(),
+                            npc.Center + new Vector2(0, -1000f),
+                            Vector2.Zero,
+                            ModContent.ProjectileType<XerocEyeProjectile>(),
+                            0, 0f, Main.myPlayer);
+                        npc.ai[3] = xeroc;
+                    }
+
+                    Main.NewText("The Stolen Light will be unleashed on its harshest detractor", Color.White);
+                    SoundEngine.PlaySound(SoundID.Roar, npc.Centet);
+                }
+
+                if (attackPhaseTimer == duration)
+                {
+                    SoundEngine.PlaySound(SoundID.Item122, npc.Center);
+
+                    Projectile.NewProjectile(npc.GetSource_FromAI(),
+                        npc.Center + new Vector2(0, -800f),
+                        Vector2.UnitY * 40f,
+                        ModContent.ProjectileType<PrimordialLightBeamProjectile>(),
+                        9999999, 10f, Main.myPlayer);
+
+                    npc.StrikeInstantKill();    
+                }
+            }
         }
 
         public override void OnKill()
