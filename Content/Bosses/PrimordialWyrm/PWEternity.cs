@@ -61,7 +61,9 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             XerocRage = 5,
             Susanoo = 6,
             YamiYamiNoMi = 7,
-            //Add more here later
+            AbyssalKnights = 8,
+            Culthulu = 9,
+            NoxusDistortion = 10,
             Desperation = 11
         }
 
@@ -95,6 +97,9 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             attackHandlers[PWAttack.XerocRage] = RunXerocRagePhase;
             attackHandlers[PWAttack.Susanoo] = RunSusanooPhase;
             attackHandlers[PWAttack.YamiYamiNoMi] = RunYamiYamiNoMiPhase;
+            attackHandlers[PWAttack.AbyssalKnights] = RunAbyssalKnightsPhase;
+            attackHandlers[PWAttack.Culthulu] = RunCulthuluPhase;
+            attackHandlers[PWAttack.NoxusDistortion] = RunNoxusDistortionPhase;
             attackHandlers[PWAttack.Desperation] = StartDesperationPhase;
         }
 
