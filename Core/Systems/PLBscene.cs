@@ -40,5 +40,17 @@ namespace FargowiltasEternalBoss.Core.Systems
                 flashDir = 0;
             }
         }
+
+        public override void ModifyScreenPosition()
+        {
+            if (flashAlpha > 0f)
+            {
+                Main.GameViewMatrix.Zoom = new Vector2(1f - flashAlpha * 0.2f);
+            }
+            else
+            {
+                Main.GameViewMatrix.Zoom = Vector2.One;
+            }
+        }
     }
 }
