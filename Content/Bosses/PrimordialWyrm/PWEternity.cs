@@ -62,7 +62,7 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             Susanoo = 6,
             YamiYamiNoMi = 7,
             AbyssalKnights = 8,
-            Culthulu = 9,
+            //
             NoxusDistortion = 10,
             Desperation = 11
         }
@@ -98,7 +98,7 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             attackHandlers[PWAttack.Susanoo] = RunSusanooPhase;
             attackHandlers[PWAttack.YamiYamiNoMi] = RunYamiYamiNoMiPhase;
             attackHandlers[PWAttack.AbyssalKnights] = RunAbyssalKnightsPhase;
-            attackHandlers[PWAttack.Culthulu] = RunCulthuluPhase;
+            //
             attackHandlers[PWAttack.NoxusDistortion] = RunNoxusDistortionPhase;
             attackHandlers[PWAttack.Desperation] = StartDesperationPhase;
         }
@@ -629,6 +629,35 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
 
             if (attackPhaseTimer > duration)
                 EndSpecialAttack(npc);
+        }
+
+        private void DoAbyssalKnightsPhase(NPC npc, Player target)
+        {
+            attackPhaseTimer++;
+            int duration = WorldSavingSystem.MasochistModeReal ? 1200: 900;
+
+            if (attackPhaseTimer == 1)
+            {
+                SoundEngine.PlaySound(SoundID.Roar, npc.Center);
+                Main.NewText("The Abyssal Knights heed their master's call!", Color.MediumPurple);
+
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    int count = WorldSavingSystem.MasochistModeReal ? 4 : 2;
+                    for (int i = 0; i < count; i++)
+                    {
+                        Vector2 spawn = npc.Center + Main.rand.NextVector2Circular(600, 400);
+                        NPC.NewNPC(npc.GetSource_FromAI(), (int)spawn.X, (int)spawn.Y,
+                            ModContent.NPCType<AbyssalKnight>(), 0, npc.whoAmI);
+                    }
+                }
+            }
+
+            if (attackPhaseTimer % 60 == 0)
+                Lighting.AddLight(npc.Center, 0.4f, 0.1f, 0.5f);
+
+            if (attackPhaseTimer > duration)
+                EndSpecialAttack(npc);    
         }
 
         private void EndSpecialAttack()
