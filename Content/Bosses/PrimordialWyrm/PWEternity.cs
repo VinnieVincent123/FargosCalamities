@@ -59,9 +59,8 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             SilvaVines = 3,
             RadianceShield = 4, 
             XerocRage = 5,
-            PillarThrow = 6,
-            LoveThem = 7,
-            Susanoo = 8,
+            Susanoo = 6,
+            YamiYamiNoMi = 7,
             //Add more here later
             Desperation = 11
         }
@@ -94,9 +93,8 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             attackHandlers[PWAttack.SilvaVines] = RunSilvaVinesPhase;
             attackHandlers[PWAttack.RadianceShield] = RunRadianceShieldPhase;
             attackHandlers[PWAttack.XerocRage] = RunXerocRagePhase;
-            attackHandlers[PWAttack.PillarThrow] = RunPillarThrowPhase;
-            attackHandlers[PWAttack.LoveThem] = RunLoveThemPhase;
             attackHandlers[PWAttack.Susanoo] = RunSusanooPhase;
+            attackHandlers[PWAttack.YamiYamiNoMi] = RunYamiYamiNoMiPhase;
             attackHandlers[PWAttack.Desperation] = StartDesperationPhase;
         }
 
@@ -519,6 +517,64 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             }  
         }
 
+        private void RunSusanooPhase(NPC npc, Player target)
+        {
+            attackPhaseTimer++;
+            int duration = WorldSavingSystem.MasochistModeReal ? 960 : 720;
+
+            if (attackPhaseTimer == 1)
+            {
+                SoundEngine.PlaySound(SoundID.Zombie104, npc.Center);
+                Main.NewText("The Wrath of the forgotten Dragon fills the Abyss!", Color.Cyan);
+
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector2 pos = npc.Center + Main.rand.NextVector2Circular(800, 600);
+                    Projectile.NewProjectile(npc.GetSource_FromAI(), pos, Vector2.Zero,
+                        ProjectileID.CultistBossLightningOrbArc,
+                        FargoSoulsUtil.ScaledProjectileDamage(npc.defDamage) / 2,
+                        2f, Main.myPlayer);
+                }
+            }
+
+            if (attackPhaseTimer % 90 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                for (int i = 0; i < 12; i++)
+                {
+                    float angle = MathHelper.ToRadians(30 * i);
+                    Vector2 velocity = angle.ToRotationVector2() * 5f;
+                    Projectile.NewProjectile(npc.GetSource_FromAI(), target.Center,
+                        velocity, ProjectileID.Typhoon, npc.damage / 6, 1f, Main.myPlayer);
+                }
+            }
+
+            if (attackPhaseTimer % 45 == 0 && Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                Vector2 strikePos = target.Center + Main.rand.NextVector2Circular(400, 400);
+                Projectile.NewProjectile(npc.GetSource_FromAI(), strikePos, Vector2.Zero,
+                    ProjectileID.CultistBossLightningOrbArc,
+                    npc.damage / 5, 3f, Main.myPlayer);
+            }
+
+            Vector2 wind = (target.Center - npc.Center).SafeNormalize(Vector2.Zero) * 0.6f;
+            target.velocity += wind;
+
+            if (WorldSavingSystem.MasochistModeReal)
+            {
+                if (attackPhaseTimer % 120 == 0)
+                {
+                    target.gravity *= -1;
+                }
+            }
+
+            if (attackPhaseTimer > duration)
+            {
+                SoundEngine.PlaySound(SoundID.Roar, npc.Center);
+                EndSpecialAttack(npc);
+            }
+
+        }
+
         private void EndSpecialAttack()
         {
             inSpecialAttack = false;
@@ -636,6 +692,8 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
                         Vector2.UnitY * 40f,
                         ModContent.ProjectileType<PrimordialLightBeamProjectile>(),
                         9999999, 10f, Main.myPlayer);
+
+                    PLBscene.TriggerFlash(90f);    
 
                     npc.StrikeInstantKill();    
                 }
