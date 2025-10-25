@@ -62,6 +62,10 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
         private bool ratKingSpawned = false;
         private List<NPC> ratKingWyrms = new();
 
+        private float noxusTimer = 0f;
+        private bool noxusActive = false;
+        private const int NOXUS_DURATION = 900;
+
         private enum PWAttack : byte
         {
             None = 0,
@@ -750,6 +754,55 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
                 ratKingSpawned = false;
                 NextPhase();
             }
+        }
+
+        private void RunNoxusDistortionPhase(Player player)
+        {
+           if (!NoxusActive)
+           {
+               noxusActive = true;
+               noxusTimer = 0;
+               SoundEngine.PlaySound(new SoundStyle("Assets/Sounds/NoxusAppear"), player.Center);
+
+               int id = NPC.NewNPC(NPC.GetSource_FromAI(), (int)player.Center.X, (int)(player.Center.Y - 800),
+                                   ModContent.NPCType<Noxus>());
+                Main.npc[id].ai[0] = NPC.whoAmI;                  
+           }
+
+           noxusTimer++;
+
+           if (noxusTimer % 45 == 0)
+           {
+               int count = 4;
+               float speed = 1.2f;
+               if (WorldSavingSystem.EternityMode) { count = 6; speed = 16f; }
+               if (WorldSavingSystem.MasochistModeReal) { count = 8; speed = 18f; }
+
+               for (int i = 0; i < count; i++)
+               {
+                   Vector2 origin = player.Center + new Vector2(Main.rand.Next(-800, 800), -600);
+                   Vector2 vel = (player.Center - origin).SafeNormalize(Vector2.Zero) * speed;
+                   Projectile.NewProjectile(NPC.GetSource_FromAI(), origin, vel,
+                       ModContent.ProjectileType<DistortionBolt>(), 80, 3f);
+               }
+           }
+
+           float swing = (float)Math.Sin(noxusTimer * 0.07f) * 280f;
+           Vector2 targetPos = player.Center + new Vector2(swing, 260f);
+           NPC.velocity = (targetPos - NPC.Center) * 0.08f;
+
+           //if (noxusTimer % 120 == 0)
+             //  Filters.Scene["ScreenDistortion"].Activate().GetShader().UseProgress(0.5f);
+        }
+
+        if (noxusTimer >= NOXUS_DURATION)
+        {
+            foreach (NPC n in Nain.npc)
+                if (n.active && n.type == ModContent.NPCType<Noxus>())
+                    n.active = false;
+
+            noxusActive = false;
+            NextPhase();        
         }
 
         private void EndSpecialAttack()
