@@ -1,5 +1,6 @@
 using CalamityMod.NPCs.PrimordialWyrm;
 using CalamityMod.World;
+using CalamityMod.NPCs.Abyss;
 using FargowiltasSouls.Core.Globals;
 using FargowiltasSouls.Core.NPCMatching;
 using Microsoft.Xna.Framework.Graphics;
@@ -45,11 +46,21 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
 
         private const int PrimordialWyrmHeadTypePlaceholder = -1;
 
-        private const int ReaverSharkTypePlaceholder = -1;
+        private const int ReaverShark = -1;
+
+        private const int EidolonWyrm = -1;
 
         private const int PWIllusionTypePlaceholder = -1;
 
         private const int DevouredSharkProjectilePlaceholder = -1;
+
+        private const int RATKING_WYRM_COUNT = 8;
+        private const float RATKING_RADIUS = 480f;
+        private const float RATKING_DURATION = 720f;
+        private float ratKingTimer = 0f;
+        private float ratKingAngle = 0f;
+        private bool ratKingSpawned = false;
+        private List<NPC> ratKingWyrms = new();
 
         private enum PWAttack : byte
         {
@@ -62,7 +73,7 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             Susanoo = 6,
             YamiYamiNoMi = 7,
             AbyssalKnights = 8,
-            //
+            RatKing = 9,
             NoxusDistortion = 10,
             Desperation = 11
         }
@@ -98,7 +109,7 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
             attackHandlers[PWAttack.Susanoo] = RunSusanooPhase;
             attackHandlers[PWAttack.YamiYamiNoMi] = RunYamiYamiNoMiPhase;
             attackHandlers[PWAttack.AbyssalKnights] = RunAbyssalKnightsPhase;
-            //
+            attackHandlers[PWAttack.RatKing] = RunRatKingPhase;
             attackHandlers[PWAttack.NoxusDistortion] = RunNoxusDistortionPhase;
             attackHandlers[PWAttack.Desperation] = StartDesperationPhase;
         }
@@ -658,6 +669,87 @@ namespace FargowiltasEternalBoss.Content.Bosses.PrimordialWyrm
 
             if (attackPhaseTimer > duration)
                 EndSpecialAttack(npc);    
+        }
+
+        private void RunRatKingPhase(Player player)
+        {
+            if (!ratKingSpawned)
+            {
+                ratKingWyrms.Clear();
+                for (int i = 0; i < RATKING_WYRM_COUNT; i++)
+                {
+                    float angle = MathHelper.TwoPi / RATKING_WYRM_COUNT * i;
+                    Vector2 spawnPos = player.Center + angle.ToRotationVector2() * RATKING_RADIUS;
+
+                    int id = NPC.NewNPC(
+                        NPC.GetSource_FromAI(),
+                        (int)spawnPos.X,
+                        (int)spawnPos.Y,
+                        ModContent.NPCType<EidolonWyrm>()
+                    );
+
+                    NPC minion = Main.npc[id];
+                    if (minion != null)
+                    {
+                        minion.localAI[0] = angle;
+                        minion.ai[0] = NPC.whoAmI;
+                        minion.netUpdate = true;
+                        ratKingWyrms.Add(minion);
+                    }
+                }
+
+                ratKingSpawned = true;
+                ratKingTimer = 0f;
+                ratKingAngle = 0f;
+
+                SoundEngine.PlaySound(SoundID.Roar with { Volume = 1.4f }, player.Center);
+                CombatText.NewText(player.getRect(), Color.LightBlue, "The depths converge...");
+            }
+
+            float rotationSpeed = 0.02f;
+            if (WorldSavingSystem.EternityMode) rotationSpeed = 0.035f;
+            if (WorldSavingSystem.MasochistModeReal) rotationSpeed = 0.045f;
+
+            ratKingAngle += rotationSpeed;
+            ratKingTimer++;
+
+            Vector2 center = Vector2.Lerp(NPC.Center, player.Center, 0.05f);
+
+            float wyrmAngle = ratKingAngle + MathHelper.Pi;
+            Vector2 orbitPos = center + wyrmAngle.ToRotationVector2() * (RATKING_RADIUS + 160f);
+            NPC.velocity  = (orbitPos - NPC.Center) * 0.08f;
+
+            for (int i = 0; i < ratKingWyrms.Count; i++)
+            {
+                if (!ratKingWyrms[i].active) continue;
+                float angle = ratKingAngle + MathHelper.TwoPi / RATKING_WYRM_COUNT * i;
+                Vector2 pos = center + angle.ToRotationVector2() * RATKING_RADIUS;
+                ratKingWyrms[i].Center = pos;
+                ratKingWyrms[i].velocity = Vector2.Zero;
+            }
+
+            if (ratKingTimer % 120 == 0)
+            {
+                Vector2 pullDir = (center - player.Center).SafeNormalize(Vector2.Zero);
+                player.velocity += pullDir * 10f;
+                SoundEngine.PlaySound(SoundID.Item74 with { Pitch = 0.6f });
+            }
+
+            if (ratKingTimer >= RATKING_DURATION)
+            {
+                foreach (NPC minion in ratKingWyrms)
+                {
+                    if (minion.active)
+                    {
+                        minion.life = 0;
+                        minion.HitEffect();
+                        minion.checkDead();
+                    }
+                }
+                ratKingWyrms.Clear();
+                ratKingSpawned = false;
+                NextPhase();
+            }
         }
 
         private void EndSpecialAttack()
